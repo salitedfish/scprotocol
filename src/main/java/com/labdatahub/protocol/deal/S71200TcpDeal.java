@@ -24,20 +24,12 @@ public class S71200TcpDeal implements S71200TcpProtocol {
 
 	@Override
     public DecodeMessage decode(JSONObject objecotData) throws Exception {
+		String code = objecotData.getString("code");
 		String deviceSn = objecotData.getString("deviceSn");
-		JSONArray jsonArray = objecotData.getJSONArray("jsonArray");
-        List<RangeItem> itemList = JSONArray.parseArray(jsonArray.toJSONString(),RangeItem.class);
         DecodeMessage decodeMessage = new DecodeMessage();
         decodeMessage.setDeviceSn(deviceSn);
         Map<String,Object> properties = new HashMap<>();
-        if(itemList.size()>0){
-            for (int i = 0; i < itemList.size(); i++) {
-                RangeItem rangeItem = itemList.get(i);
-                List<Integer> data = rangeItem.getRegisterList();
-                properties.put("temperature",data.get(0));
-                properties.put("windSpeed",data.get(1));
-            }
-        }
+        properties.put(code,objecotData.get("data"));
         decodeMessage.setProperties(properties);
         //解析消息
         return decodeMessage;

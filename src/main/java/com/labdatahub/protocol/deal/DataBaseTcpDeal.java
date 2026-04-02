@@ -1,0 +1,59 @@
+package com.labdatahub.protocol.deal;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.TypeReference;
+import com.labdatahub.protocol.message.DecodeMessage;
+import com.labdatahub.protocol.message.EncodeMessage;
+import com.labdatahub.protocol.message.RangeItem;
+import com.labdatahub.protocol.parent.DataBaseTcpProtocol;
+
+/**
+ * 
+* @ClassName: DataBaseTcpDeal  
+* @Description: DataBaseTcp消息处理
+* @author xwb  
+* @date 2026年4月1日
+ */
+public class DataBaseTcpDeal implements DataBaseTcpProtocol {
+
+	@Override
+    public DecodeMessage decode(JSONObject objecotData) throws Exception {
+		//String code = objecotData.getString("code");
+		String deviceSn = objecotData.getString("deviceSn");
+		Map<String, Object> properties = objecotData.getObject("data", new TypeReference<Map<String, Object>>() {});
+        DecodeMessage decodeMessage = new DecodeMessage();
+        decodeMessage.setDeviceSn(deviceSn);
+
+        decodeMessage.setProperties(properties);
+        //解析消息
+        return decodeMessage;
+    }
+	
+    @Override
+    public EncodeMessage encode(String functionCode, String deviceSn, Map<String, Object> properties, String params, String customConfig,Map<String,Object> otherConfig) throws Exception {
+        if("fun1".equals(functionCode)){
+            List<RangeItem> list = new ArrayList<>();
+            list.add(new RangeItem(0,2,Arrays.asList(22,4)));
+            return EncodeMessage.builder()
+                    .isSend(true)
+                    .deviceSn(deviceSn)
+                    .modbusWriteJson(JSONArray.toJSONString(list))
+                    .build();
+        }else {
+            List<RangeItem> list = new ArrayList<>();
+            list.add(new RangeItem(0,2,Arrays.asList(11,2)));
+            return EncodeMessage.builder()
+                    .isSend(true)
+                    .deviceSn(deviceSn)
+                    .modbusWriteJson(JSONArray.toJSONString(list))
+                    .build();
+        }
+    }
+}
