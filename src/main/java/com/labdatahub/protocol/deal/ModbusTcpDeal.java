@@ -54,10 +54,12 @@ public class ModbusTcpDeal implements ModbusTcpProtocol {
 				RangeItem rangeItem = itemList.get(i);
 				List<Integer> data = rangeItem.getRegisterList();
 				if (data.size() > 1) {
-					int reg0 = ((Integer) data.get(0)).intValue();
-					int reg1 = ((Integer) data.get(1)).intValue();
-					int combined = reg0 << 16 | reg1 & 0xFFFF;
-					float result = Float.intBitsToFloat(combined);
+					int reg0 = data.get(0);
+				    int reg1 = data.get(1);
+				    
+				    // 假设大端序
+				    int combined = (reg0 << 16) | (reg1 & 0xFFFF);
+				    float result = Float.intBitsToFloat(combined);
 					properties.put(code, Float.valueOf(result));
 				} else {
 					properties.put(code, data.get(0));
