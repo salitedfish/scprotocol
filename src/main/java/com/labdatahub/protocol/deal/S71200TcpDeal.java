@@ -1,3 +1,4 @@
+//由AI修改
 package com.labdatahub.protocol.deal;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import com.labdatahub.protocol.message.DecodeMessage;
 import com.labdatahub.protocol.message.EncodeMessage;
 import com.labdatahub.protocol.message.RangeItem;
 import com.labdatahub.protocol.parent.S71200TcpProtocol;
+import com.labdatahub.protocol.utils.RegisterValueUtils;
 
 /**
  * 
@@ -26,10 +28,17 @@ public class S71200TcpDeal implements S71200TcpProtocol {
     public DecodeMessage decode(JSONObject objecotData) throws Exception {
 		String code = objecotData.getString("code");
 		String deviceSn = objecotData.getString("deviceSn");
+		String isSigned = objecotData.getString("isSigned");
+		Double scale = objecotData.getDouble("scale");
+		Double offset = objecotData.getDouble("offset");
         DecodeMessage decodeMessage = new DecodeMessage();
         decodeMessage.setDeviceSn(deviceSn);
         Map<String,Object> properties = new HashMap<>();
-        properties.put(code,objecotData.get("data"));
+        // S7DataReader 对 DBW 按 16 位无符号读取，这里按物模型 isSigned 做符号扩展后再缩放
+        Object value = objecotData.get("data");
+        value = RegisterValueUtils.applySigned(value, isSigned);
+        value = RegisterValueUtils.applyScale(value, scale, offset);
+        properties.put(code,value);
         decodeMessage.setProperties(properties);
         //解析消息
         return decodeMessage;

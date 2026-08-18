@@ -1,3 +1,4 @@
+//由AI修改
 package com.labdatahub.protocol.deal;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import com.labdatahub.protocol.message.DecodeMessage;
 import com.labdatahub.protocol.message.EncodeMessage;
 import com.labdatahub.protocol.message.RangeItem;
 import com.labdatahub.protocol.parent.OmronFinsTcpProtocol;
+import com.labdatahub.protocol.utils.RegisterValueUtils;
 
 /**
  * 
@@ -26,10 +28,20 @@ public class OmronFinsTcpDeal implements OmronFinsTcpProtocol {
     public DecodeMessage decode(JSONObject objecotData) throws Exception {
 		String code = objecotData.getString("code");
 		String deviceSn = objecotData.getString("deviceSn");
+		String dataType = objecotData.getString("dataType");
+		String byteOrder = objecotData.getString("byteOrder");
+		String isSigned = objecotData.getString("isSigned");
+		Double scale = objecotData.getDouble("scale");
+		Double offset = objecotData.getDouble("offset");
         DecodeMessage decodeMessage = new DecodeMessage();
         decodeMessage.setDeviceSn(deviceSn);
         Map<String,Object> properties = new HashMap<>();
-        properties.put(code,objecotData.get("data"));
+        JSONArray jsonArray = objecotData.getJSONArray("jsonArray");
+        if (jsonArray != null) {
+            List<Integer> data = JSONArray.parseArray(jsonArray.toJSONString(), Integer.class);
+            Object value = RegisterValueUtils.convert(data, dataType, byteOrder, isSigned, scale, offset);
+            properties.put(code, value);
+        }
         decodeMessage.setProperties(properties);
         //解析消息
         return decodeMessage;

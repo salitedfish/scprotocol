@@ -1,3 +1,4 @@
+//由AI修改
 package com.labdatahub.protocol.deal;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import com.labdatahub.protocol.message.DecodeMessage;
 import com.labdatahub.protocol.message.EncodeMessage;
 import com.labdatahub.protocol.message.RangeItem;
 import com.labdatahub.protocol.parent.ModbusTcpProtocol;
+import com.labdatahub.protocol.utils.RegisterValueUtils;
 
 /**
  * @Description: UDP消息处理
@@ -43,27 +45,23 @@ public class ModbusTcpDeal implements ModbusTcpProtocol {
 	public DecodeMessage decode(JSONObject objecotData) throws Exception {
 		String code = objecotData.getString("code");
 		String deviceSn = objecotData.getString("deviceSn");
+		String dataType = objecotData.getString("dataType");
+		String byteOrder = objecotData.getString("byteOrder");
+		String isSigned = objecotData.getString("isSigned");
+		Double scale = objecotData.getDouble("scale");
+		Double offset = objecotData.getDouble("offset");
 		JSONArray jsonArray = objecotData.getJSONArray("jsonArray");
 		List<RangeItem> itemList = JSONArray
-				.parseArray(jsonArray.toJSONString(new com.alibaba.fastjson2.JSONWriter.Feature[0]), RangeItem.class);
+				.parseArray(jsonArray.toJSONString(), RangeItem.class);
 		DecodeMessage decodeMessage = new DecodeMessage();
 		decodeMessage.setDeviceSn(deviceSn);
 		Map<String, Object> properties = new HashMap<>();
-		if (itemList.size() > 0)
+		if (itemList != null)
 			for (int i = 0; i < itemList.size(); i++) {
 				RangeItem rangeItem = itemList.get(i);
 				List<Integer> data = rangeItem.getRegisterList();
-				if (data.size() > 1) {
-					int reg0 = data.get(0);
-				    int reg1 = data.get(1);
-				    
-				    // 假设大端序
-				    int combined = (reg0 << 16) | (reg1 & 0xFFFF);
-				    float result = Float.intBitsToFloat(combined);
-					properties.put(code, Float.valueOf(result));
-				} else {
-					properties.put(code, data.get(0));
-				}
+				Object value = RegisterValueUtils.convert(data, dataType, byteOrder, isSigned, scale, offset);
+				properties.put(code, value);
 			}
 		decodeMessage.setProperties(properties);
 		return decodeMessage;
