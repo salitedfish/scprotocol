@@ -15,15 +15,16 @@
 com.labdatahub.protocol
 ├── parent/    # 协议基类：MqttClientProtocol、MqttBrokerProtocol、TcpServerProtocol、
 │              #   UdpServerProtocol、CoapServerProtocol、HttpServerProtocol、WsServerProtocol、
-│              #   ModbusTcpProtocol、S71200TcpProtocol、OmronFinsTcpProtocol、DataBaseTcpProtocol
+│              #   ModbusTcpProtocol、S71200TcpProtocol、OmronFinsTcpProtocol、DataBaseTcpProtocol、
+│              #   BrotherTcpProtocol（Brother NC 数控，TCP 10000 只读）
 ├── deal/      # 协议具体实现/处理：MqttClientDeal、MqttServerDeal、TcpServerDeal、UdpServerDeal、
 │              #   CoapServerDeal、HttpServerDeal、WsServerDeal、ModbusTcpDeal、S71200TcpDeal、
-│              #   OmronFinsTcpDeal、DataBaseTcpDeal
+│              #   OmronFinsTcpDeal、DataBaseTcpDeal、BrotherTcpDeal
 ├── message/   # 消息模型：DecodeMessage、EncodeMessage、DeviceRegister、RangeItem
 └── utils/     # RedisContextHolder、RegisterValueUtils 等工具
 ```
 
-`RegisterValueUtils`：寄存器值按物模型解析参数转换工具，`convert(List<Integer>, dataType, byteOrder, isSigned, scale, offset)` 支持 int/float/double/bool/string，`applyScale` 仅做缩放偏移（S7 用）。Modbus/S7/Fins 三个轮询协议的 `decode` 依据后端传来的物模型解析参数解析。
+`RegisterValueUtils`：寄存器值按物模型解析参数转换工具，`convert(List<Integer>, dataType, byteOrder, isSigned, scale, offset)` 支持 int/float/double/bool/string，`applyScale` 仅做缩放偏移（S7 用）。Modbus/S7/Fins/Brother 四个轮询协议的 `decode` 依据后端传来的物模型解析参数解析；其中 `BrotherTcpDeal.decode` 收到的 `value` 是响应行按点位地址（数据区.行号.字段序号）取出的原始字符串，按 dataType 转类型后套 `applyScale`，byteOrder/isSigned 不适用（ASCII）。
 
 ## 构建
 
