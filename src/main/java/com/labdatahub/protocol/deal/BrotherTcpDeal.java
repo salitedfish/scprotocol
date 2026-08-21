@@ -81,6 +81,12 @@ public class BrotherTcpDeal implements BrotherTcpProtocol {
 					return null;
 				}
 			}
+			case "string":
+			case "text":
+			case "varchar": {
+				// 字符串类型：原样返回，不做数字解析
+				return v;
+			}
 			default: {
 				// dataType 未配置：纯数字转 double，其余保持字符串
 				try {
