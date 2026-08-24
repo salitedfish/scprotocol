@@ -17,15 +17,18 @@ com.labdatahub.protocol
 │              #   UdpServerProtocol、CoapServerProtocol、HttpServerProtocol、WsServerProtocol、
 │              #   ModbusTcpProtocol、S71200TcpProtocol、OmronFinsTcpProtocol、DataBaseTcpProtocol、
 │              #   BrotherTcpProtocol（Brother NC 数控，TCP 10000 只读）、
-│              #   FanucFocasProtocol（FANUC 0i 数控，FOCAS2 只读）
+│              #   FanucFocasProtocol（FANUC 0i 数控，FOCAS2 只读）、
+│              #   MitsubishiTcpProtocol（三菱 PLC，MC QnA-3E 二进制帧，TCP 5007 只读）
 ├── deal/      # 协议具体实现/处理：MqttClientDeal、MqttServerDeal、TcpServerDeal、UdpServerDeal、
 │              #   CoapServerDeal、HttpServerDeal、WsServerDeal、ModbusTcpDeal、S71200TcpDeal、
-│              #   OmronFinsTcpDeal、DataBaseTcpDeal、BrotherTcpDeal、FanucFocasDeal
+│              #   OmronFinsTcpDeal、DataBaseTcpDeal、BrotherTcpDeal、FanucFocasDeal、MitsubishiTcpDeal
 ├── message/   # 消息模型：DecodeMessage、EncodeMessage、DeviceRegister、RangeItem
 └── utils/     # RedisContextHolder、RegisterValueUtils 等工具
 ```
 
-`RegisterValueUtils`：寄存器值按物模型解析参数转换工具，`convert(List<Integer>, dataType, byteOrder, isSigned, scale, offset)` 支持 int/float/double/bool/string，`applyScale` 仅做缩放偏移（S7 用）。Modbus/S7/Fins/Brother 四个轮询协议的 `decode` 依据后端传来的物模型解析参数解析；其中 `BrotherTcpDeal.decode` 收到的 `value` 是响应行按点位地址（数据区.行号.字段序号）取出的原始字符串，按 dataType 转类型后套 `applyScale`，byteOrder/isSigned 不适用（ASCII）。
+`RegisterValueUtils`：寄存器值按物模型解析参数转换工具，`convert(List<Integer>, dataType, byteOrder, isSigned, scale, offset)` 支持 int/float/double/bool/string，`applyScale` 仅做缩放偏移（S7 用）。Modbus/S7/Fins/Brother/Mitsubishi 五个轮询协议的 `decode` 依据后端传来的物模型解析参数解析；其中 `BrotherTcpDeal.decode` 收到的 `value` 是响应行按点位地址（数据区.行号.字段序号）取出的原始字符串，按 dataType 转类型后套 `applyScale`，byteOrder/isSigned 不适用（ASCII）。
+
+- **三菱 MC（`MitsubishiTcpProtocol` / `MitsubishiTcpDeal`，netType/protocolType = `MITSUBISHI_TCP`）**：decode 与 FINS 同构——后端 `MitsubishiDataReader`（`lab-data-hub-api` 组件包 `mitsubishi_tcp`）按 MC QnA-3E 帧（小端）读出的原始数值（字读每点 2 字节小端整数 / 位读 0/1）塞进 `jsonArray`（`List<Integer>`），decode 收到 `code/deviceSn/dataType/byteOrder/isSigned/scale/offset` + 扁平 `jsonArray` 数组（一个 code 对应一个点/块），`RegisterValueUtils.convert(data, dataType, byteOrder, isSigned, scale, offset)` 转类型解析。协议库**不含网络 I/O、不感知软元件地址**。encode 为只读 stub（`isSend=false`）。
 
 - **Modbus decode 收到的是合并后的单个连续块**：`ModbusMessageConsumeService` 把 `registerRange` 的多个子区间合并为 `[minStart, maxEnd]` 一块读取，decode 的 jsonArray 只有一个 item（code 键不再被多区间互覆盖）。`applySigned`/`applyScale` 按物模型解析参数套用；bool 类型按字非零转 0/1。
 - **S7 decode 的 applySigned 只对 DBW（16 位整型）生效**：`S71200TcpDeal.decode` 收到 `blockType`，仅 `blockType == null || "DBW"` 时套 `applySigned`——因为 `applySigned` 做 16 位符号扩展，对 DBD 的 DINT 32 位整型（低 16 位 >0x7FFF 时）会截断成负数，DBD/DBB 直接 `applyScale`。DBD 的 int 系列解码（手动 4 字节大端 int32 / float32）在 `lab-data-hub-api` 的 `S7DataReader` 侧完成，decode 收到的已是原始值。
