@@ -36,7 +36,12 @@ public class S71200TcpDeal implements S71200TcpProtocol {
         Map<String,Object> properties = new HashMap<>();
         // S7DataReader 对 DBW 按 16 位无符号读取，这里按物模型 isSigned 做符号扩展后再缩放
         Object value = objecotData.get("data");
-        value = RegisterValueUtils.applySigned(value, isSigned);
+        // DBW 是 16 位整型，按物模型 isSigned 做符号扩展；
+        // DBD(32位整型/浮点)/DBX(位)/DBB(字符串) 已在读取侧按 dataType 转好类型，不 applySigned，避免把 32 位值按 16 位截断
+        String blockType = objecotData.getString("blockType");
+        if (blockType == null || "DBW".equals(blockType)) {
+            value = RegisterValueUtils.applySigned(value, isSigned);
+        }
         value = RegisterValueUtils.applyScale(value, scale, offset);
         properties.put(code,value);
         decodeMessage.setProperties(properties);
