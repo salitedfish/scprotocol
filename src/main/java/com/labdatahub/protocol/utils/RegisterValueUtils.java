@@ -137,6 +137,13 @@ public class RegisterValueUtils {
         } else if (n <= 2) {
             long v = combined & 0xFFFFFFFFL;
             return signed ? (int) v : v;
+        } else if (n == 3) {
+            // 48位：有符号时符号扩展为64位，避免高位0把负数读成正的垃圾大数
+            long v = combined & 0xFFFFFFFFFFFFL;
+            if (signed && (v & 0x800000000000L) != 0) {
+                v |= ~0xFFFFFFFFFFFFL;
+            }
+            return v;
         } else {
             return combined;
         }
@@ -146,11 +153,12 @@ public class RegisterValueUtils {
      * 浮点解析：2个字→float32，4个字→double64；超过4个字无法表达，返回null避免溢出成垃圾值
      */
     private static Object toFloat(List<Integer> regs, boolean bigEndian) {
-        if (regs.size() > 4) {
+        // 浮点必须 2 个字（float32）或 4 个字（double64），1/3 个字无法构成有效浮点位模式，返回null避免垃圾值
+        if (regs.size() != 2 && regs.size() != 4) {
             return null;
         }
         long combined = combine(regs, bigEndian);
-        if (regs.size() >= 4) {
+        if (regs.size() == 4) {
             return Double.longBitsToDouble(combined);
         }
         int bits = (int) (combined & 0xFFFFFFFFL);

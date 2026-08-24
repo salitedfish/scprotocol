@@ -26,7 +26,7 @@ com.labdatahub.protocol
 └── utils/     # RedisContextHolder、RegisterValueUtils 等工具
 ```
 
-`RegisterValueUtils`：寄存器值按物模型解析参数转换工具，`convert(List<Integer>, dataType, byteOrder, isSigned, scale, offset)` 支持 int/float/double/bool/string，`applyScale` 仅做缩放偏移（S7 用）。Modbus/S7/Fins/Brother/Mitsubishi 五个轮询协议的 `decode` 依据后端传来的物模型解析参数解析；其中 `BrotherTcpDeal.decode` 收到的 `value` 是响应行按点位地址（数据区.行号.字段序号）取出的原始字符串，按 dataType 转类型后套 `applyScale`，byteOrder/isSigned 不适用（ASCII）。
+`RegisterValueUtils`：寄存器值按物模型解析参数转换工具，`convert(List<Integer>, dataType, byteOrder, isSigned, scale, offset)` 支持 int/float/double/bool/string，`applyScale` 仅做缩放偏移（S7 用）。**边界修正**：int 解析 3 个字（48位）时按 isSigned 做 48→64 位符号扩展（避免负数读成正的垃圾大数），4 个字（64位）原样返回；float/double 解析仅接受 2 个字（float32）/4 个字（double64），1/3 个字返回 null 避免凑出垃圾浮点值。Modbus/S7/Fins/Brother/Mitsubishi 五个轮询协议的 `decode` 依据后端传来的物模型解析参数解析；其中 `BrotherTcpDeal.decode` 收到的 `value` 是响应行按点位地址（数据区.行号.字段序号）取出的原始字符串，按 dataType 转类型后套 `applyScale`，byteOrder/isSigned 不适用（ASCII）。
 
 - **三菱 MC（`MitsubishiTcpProtocol` / `MitsubishiTcpDeal`，netType/protocolType = `MITSUBISHI_TCP`）**：decode 与 FINS 同构——后端 `MitsubishiDataReader`（`lab-data-hub-api` 组件包 `mitsubishi_tcp`）按 MC QnA-3E 帧（小端）读出的原始数值（字读每点 2 字节小端整数 / 位读 0/1）塞进 `jsonArray`（`List<Integer>`），decode 收到 `code/deviceSn/dataType/byteOrder/isSigned/scale/offset` + 扁平 `jsonArray` 数组（一个 code 对应一个点/块），`RegisterValueUtils.convert(data, dataType, byteOrder, isSigned, scale, offset)` 转类型解析。协议库**不含网络 I/O、不感知软元件地址**。encode 为只读 stub（`isSend=false`）。
 
