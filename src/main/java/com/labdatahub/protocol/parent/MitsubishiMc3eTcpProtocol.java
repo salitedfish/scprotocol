@@ -8,10 +8,10 @@ import com.labdatahub.protocol.message.DecodeMessage;
 import com.labdatahub.protocol.message.EncodeMessage;
 
 /**
- * 三菱 MC 协议（MITSUBISHI_TCP，QnA兼容3E帧）必须实现的统一接口。
+ * 三菱 MC 协议（MITSUBISHI_MC3E_TCP，QnA兼容3E帧）必须实现的统一接口。
  * 方法签名必须与 api 侧 ProtocolManager 反射路径一致：decode(JSONObject) / encode(String,String,Map,String,String,Map)。
  */
-public interface MitsubishiTcpProtocol {
+public interface MitsubishiMc3eTcpProtocol {
 
     /**
      * 解析设备寄存器的数据
