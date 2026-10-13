@@ -82,7 +82,7 @@ com.labdatahub.protocol
 
 Brother 的 **PDSP 语义点位表（语义点位 → 地址映射）为前端/后端配置层职责，协议库不感知**：前端 `lab-data-hub-web/src/utils/brotherTcpPoints.js` 内置点表，配置 code 填点位语义 key；本库只按后端传入的 `code/value/dataType` 解析，地址约定仍是 `数据区.行号.字段序号`，无协议库改动。
 
-**FANUC FOCAS2（`FanucFocasProtocol` / `FanucFocasDeal`，netType/protocolType = `FANUC_TCP`）**：协议库仍只做解码（decode 按 `code/deviceSn/value/dataType` 解析，地址 = `采集项类型.参数1.参数2`，如 `axis.1.1` = X 轴机械坐标），**不感知 FOCAS2 地址、不含网络 I/O/JNA**。FOCAS2 的实际采集（fwlib32 JNA 绑定、连接、调度、自愈）全部在 `lab-data-hub-api` 的 `labdatahub-component` 模块 `com.labdatahub.component.fanuc_focas` 包，协议库 decode 收到的是该包 `FanucFocasDataReader` 按点位读出的原始字符串，与 Brother 一致按 dataType 转类型 + `applyScale`。
+**FANUC FOCAS2（`FanucFocasProtocol` / `FanucFocasDeal`，netType/protocolType = `FANUC_TCP`）**：协议库仍只做解码（decode 按 `code/deviceSn/value/dataType` 解析，地址 = `采集项类型.参数1.参数2`，如 `axis.1.1` = X 轴机械坐标），**不感知 FOCAS2 地址、不含网络 I/O/JNA**。FOCAS2 的实际采集（fwlib JNA 绑定、连接、调度、自愈）全部在 `lab-data-hub-api` 的 `labdatahub-component` 模块 `com.labdatahub.component.fanuc_focas` 包，协议库 decode 收到的是该包 `FanucFocasDataReader` 按点位读出的原始字符串，与 Brother 一致按 dataType 转类型 + `applyScale`。
 
 ## 构建
 

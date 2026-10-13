@@ -13,7 +13,7 @@ import com.labdatahub.protocol.utils.RegisterValueUtils;
 /**
  * @ClassName: FanucFocasDeal
  * @Description: FANUC 数控（FOCAS2）消息处理
- *               FOCAS2 数据由后端 component 模块经 fwlib32 库读出，decode 收到的是按点位地址
+ *               FOCAS2 数据由后端 component 模块经官方库读出，decode 收到的是按点位地址
  *               （readType.param1.param2）取出的原始值字符串 value，这里按物模型 dataType 转类型并套缩放偏移
  * @author labdatahub
  */

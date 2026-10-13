@@ -9,7 +9,7 @@ import com.labdatahub.protocol.message.EncodeMessage;
 
 /**
  * FANUC 数控（FOCAS2）协议包必须实现的统一接口
- * 对接 FANUC 0i-MF Plus 等系统，经 fwlib32 库 TCP 8193 端口只读采集
+ * 对接 FANUC 0i-MF Plus 等系统，经 FOCAS2 官方库 TCP 8193 端口只读采集
  */
 public interface FanucFocasProtocol {
 
