@@ -84,6 +84,8 @@ Brother 的 **PDSP 语义点位表（语义点位 → 地址映射）为前端/�
 
 **FANUC FOCAS2（`FanucFocasProtocol` / `FanucFocasDeal`，netType/protocolType = `FANUC_TCP`）**：协议库仍只做解码（decode 按 `code/deviceSn/value/dataType` 解析，地址 = `采集项类型.参数1.参数2`，如 `axis.1.1` = X 轴机械坐标），**不感知 FOCAS2 地址、不含网络 I/O/JNA**。FOCAS2 的实际采集（fwlib JNA 绑定、连接、调度、自愈）全部在 `lab-data-hub-api` 的 `labdatahub-component` 模块 `com.labdatahub.component.fanuc_focas` 包，协议库 decode 收到的是该包 `FanucFocasDataReader` 按点位读出的原始字符串，与 Brother 一致按 dataType 转类型 + `applyScale`。
 
+**HTTP_SERVER（`HttpServerProtocol` / `HttpServerDeal`）是接入侧协议**：外部系统主动 POST 进来，平台起内嵌 Tomcat 把**原始请求整包**（`requestMethod/requestPath/contentType/headers/queryParams/requestBody/formData`）交给 `decode`，所以**接口形状完全由这个 deal 定义**。出厂实现 = `POST /<任意路径>` + 扁平 JSON，`deviceSn` 从 body 顶层读，**body 每个 key（含 `deviceSn` 自身）都进 `properties`**；`httpNeedReply=false`、`httpReply=body 原文`（实际响应被平台置空），`encode` 是**空壳**（HTTP_SERVER 不支持写值，走 api 侧 409 口径，见上面「写值能力一览」）。改了这里的 `decode` 就要重编 jar 并在前端「协议管理」**重新上传注册**；`decode` 返回 null 时平台直接丢弃该请求（连 `device.up` 都不发）。**平台侧怎么用（端口/needReply/规则引擎/物模型/心跳）见 `lab-data-hub-api/CLAUDE.md`「HTTP_SERVER 接入侧协议」那一节（2026-10-16 实测）。**
+
 ## 构建
 
 ```bash
